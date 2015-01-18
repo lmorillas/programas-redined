@@ -10,7 +10,8 @@ class AragonSpider(scrapy.Spider):
     name = "aragon"
     allowed_domains = ["redined.mecd.gob.es"]
     start_urls = (
-        'http://redined.mecd.gob.es/xmlui/discover?scopeFilter=Innovaciones&query=arag%C3%B3n&submit=Ir',
+        #'http://redined.mecd.gob.es/xmlui/discover?scopeFilter=Innovaciones&query=arag%C3%B3n&submit=Ir',
+        'http://redined.mecd.gob.es/xmlui/discover?scopeFilter=Innovaciones&query=%22Gobierno+de+Arag%C3%B3n%22+%22Pol%C3%ADtica+Educativa%22&submit=Ir&scopeFilter=',
 
     )
 
@@ -19,7 +20,7 @@ class AragonSpider(scrapy.Spider):
         if siguientes:
             yield scrapy.Request(urlparse.urljoin(BASEp, siguientes[0]))
         for link in response.selector.xpath(u'//div[@class="artifact-title"]/a/@href').extract():
-            yield scrapy.Request(urlparse.urljoin(BASE, link), callback=self.parse_item)
+            yield scrapy.Request(urlparse.urljoin(BASE, link +'?show=full'), callback=self.parse_item)
 
     def parse_item(self, response):
         def mangle(x):
@@ -32,9 +33,17 @@ class AragonSpider(scrapy.Spider):
         u'DC.subject']
 
         exprxp = '//meta[@name="{}"]/@content'
+        exprxptabla = '//td[text() = "{}"]/following-sibling::td[1]/text()'
         item = RedinedItem()
+        sel = response.selector
 
         for k in claves:
-            item[mangle(k)] = response.selector.xpath(exprxp.format(k)).extract()
+            item[mangle(k)] = sel.xpath(exprxp.format(k)).extract()
+            item['centro_ed'] = sel.xpath(exprxptabla.format("dc.contributor.other")).extract()
+            item['audiencia'] = sel.xpath(exprxptabla.format("dc.audience")).extract()
+            item['nivel'] = sel.xpath(exprxptabla.format('dc.educationLevel')).extract()
+            item['tipo'] = sel.xpath(exprxptabla.format('dc.type')).extract()
+
+
         yield item
 

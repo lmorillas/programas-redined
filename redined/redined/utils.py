@@ -17,3 +17,14 @@ def lcs(S,T):
                     lcs_set.add(S[i-c+1:i+1])
 
     return lcs_set
+
+
+def extrae_centro(dc_cont):
+    try:
+        #if len(dc_cont) > 1:
+        rawcentro = dc_cont[-2]
+        return rawcentro.split(';')[0]
+    except:
+        print '-->', dc_cont
+    return ''
+
