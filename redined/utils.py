@@ -21,16 +21,6 @@ def lcs(S,T):
     return lcs_set
 
 
-def extrae_centro(dc_cont):
-    try:
-        #if len(dc_cont) > 1:
-        rawcentro = dc_cont[-2]
-        return rawcentro.split(';')[0]
-    except:
-        print '-->', dc_cont
-    return ''
-
-
 def centro(datos):
     try:
         d = datos.split(';')[0]
@@ -42,12 +32,14 @@ def centro(datos):
         print '---> ', datos
     return ''
 
+
 def centro_dir(datos):
     return ', '.join(datos.split(';')[1:3]).strip()
 
 import json
-centros = json.load(open('../centros_loc.json'))
-red = json.load(open('../redined.json'))
+centros = json.load(open('centros_loc.json'))
+red = json.load(open('redined.json'))
+centrosraw = json.load(open('datos_centros.json'))
 
 def latlon(direccion):
     cen = centros.get(direccion)
@@ -56,6 +48,22 @@ def latlon(direccion):
     else:
         return ''
 
+def localidad(direccion):
+    locs = "village city town suburb hamlet".split()
+
+    raw = centrosraw.get(direccion)
+    if raw:
+        raw = raw.get('address')
+    else:
+        print '*' * 10, direccion
+        return ''
+    direcc = ''
+    if raw:
+        for loc in locs:
+            direcc = raw.get(loc)
+            if direcc:
+                break
+    return direcc
 
 def crea_item(dato):
     item = {}
@@ -69,7 +77,8 @@ def crea_item(dato):
     item['destinatarios'] = dato.get('audiencia')
     item['medio'] = dato.get('DCTERMS__medium')
     item['uri'] = dato.get('DC__identifier')[0]
-    item['temas'] =dato.get('DC__subject')
+    item['temas'] = dato.get('DC__subject')
+    item['localidad'] = list(set([localidad(centro_dir(c))  for c in dato.get('centro_ed')]))
     return item
 
 items = []
